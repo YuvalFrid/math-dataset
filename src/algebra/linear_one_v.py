@@ -81,8 +81,68 @@ class Generate_Linear_One_V(AlgebraProblem):
     def generate_json(self):
         base_json = super().generate_json()
         base_json.update({
-            "variable": [self.variable],
+            "variables": [self.variable],
             "lhs": [self.lhs],
             "rhs": [self.rhs]
+        })
+        return base_json
+
+
+
+
+class Generate_Linear_Inequality_One_V(AlgebraProblem):
+    def __init__(self):
+        super().__init__(problem_type="inequalities.linear.one_v")
+        self.inequality = None
+        self.variable = None
+        self.lhs = None
+        self.rhs = None
+        self.inequality_sign = None
+
+    def generate_question(self, level="easy"):
+        self.variable = set_variable()
+        self.level = level
+        self.lhs, self.rhs = self.generate_equation(level)  # REUSE the existing method!
+        self.inequality_sign = self.get_inequality_sign(level)
+        self.inequality = f"{self.lhs} {self.inequality_sign} {self.rhs}"
+        self.question = self.question_text()
+        self.json = self.generate_json()
+        return self.question, self.json
+
+    def get_inequality_sign(self, level):
+        """Get appropriate inequality sign based on level."""
+        basic_signs = ["<", ">", "≤", "≥"]
+        compound_signs = ["<", ">", "≤", "≥", "≠"]
+        
+        if level == "easy":
+            return random.choice(basic_signs)
+        elif level == "medium":
+            return random.choice(compound_signs)
+        else:  # hard
+            # For hard, sometimes create compound inequalities
+            if np.random.rand() < 0.3:
+                sign1 = random.choice(["<", "≤"])
+                sign2 = random.choice([">", "≥"]) 
+                return f"{sign1} {self.variable} {sign2}"
+            return random.choice(compound_signs)
+
+    def question_text(self):
+        templates = [
+            f"Solve for {self.variable}: {self.inequality}",
+            f"What values of {self.variable} satisfy {self.inequality}?",
+            f"Find {self.variable} such that {self.inequality}.",
+            f"Solve the inequality {self.inequality} for {self.variable}.",
+            f"Determine the solution set for {self.inequality}.",
+            f"Find all {self.variable} that make {self.inequality} true."
+        ]
+        return random.choice(templates)
+
+    def generate_json(self):
+        base_json = super().generate_json()
+        base_json.update({
+            "variables": [self.variable],
+            "lhs": [self.lhs],
+            "rhs": [self.rhs],
+            "inequality_sign": self.inequality_sign
         })
         return base_json
